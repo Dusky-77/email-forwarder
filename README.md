@@ -36,7 +36,8 @@ for each gmail account you want to watch:
 3. enable the **gmail api** for that project
 4. go to "credentials" → "create credentials" → "oauth client id"
 5. application type: **desktop app**
-6. download the json, this is your `credentials.json` for that account
+6. download the json, this is your `credentials.json` for that account, paste it into `config/` as `config/whatever the name is.json`.
+7. then change the path `CredentialsFile` in `config.go` to point to your new credentials file.
 
 do this once per google cloud project. you can reuse one project for multiple gmail accounts, you just need to go through the oauth consent screen separately for each gmail account.
 
