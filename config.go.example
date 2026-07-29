@@ -1,0 +1,108 @@
+package main
+
+// everything in this file is meant to be edited directly
+// no env vars, no yaml, just go and change the values below
+
+// GmailAccount is one gmail inbox we watch
+type GmailAccount struct {
+	Name            string // just a label for logs, must be unique across accounts
+	EmailAddress    string
+	CredentialsFile string // path to the oauth client json from google cloud console
+	TokenFile       string // path where the refresh token gets cached after first login
+}
+
+// Accounts is the list of gmail inboxes to poll
+// add as many as you want, each one needs its own oauth credential + token file
+// Name must be unique per account, its used for both logs and the seen-store filename
+var Accounts = []GmailAccount{
+	{
+		Name:            "any_name",
+		EmailAddress:    "your_email",
+		CredentialsFile: "config/name_of_file.json", // make sure exists in config/ and is readable by the process, if you update it, build the .exe again
+		TokenFile:       "config/name_of_file.json", // auto-made, no need to touch.
+	},
+}
+
+// PingTarget is a person or role to mention when a rule fires
+type PingTarget struct {
+	UserIDs []string // discord user ids, leave empty if not pinging users
+	RoleIDs []string // discord role ids, leave empty if not pinging roles
+}
+
+// DefaultPing gets used when a rule doesnt set its own ping targets
+var DefaultPing = PingTarget{
+	UserIDs: []string{
+		"123456789", // replace it with user ids
+	},
+	RoleIDs: []string{}, // fill in the curly brackets, add values in " " and separate with commas.
+}
+
+// Rule describes what to look for in incoming mail and where to send it
+//
+// matching works like this, all fields you fill in must match (AND logic between fields)
+// but within SenderContains / Keywords, its OR logic (any one entry matching is enough)
+// leave a field empty/nil to skip that check entirely
+//
+// rules are checked top to bottom, first match wins and stops the check
+// so if two rules could both match the same email, only the higher one fires
+type Rule struct {
+	Name string // label shown in discord embed footer and logs, keep unique per rule
+
+	SenderEmails       []string // exact sender email match, case insensitive
+	SenderDomains      []string // matches anything @domain.com
+	SenderNameContains []string // partial match against the display name, case insensitive
+
+	Keywords []string // case sensitive, checked against subject and body separately
+
+	WebhookURL string // which discord webhook this rule forwards to
+
+	Ping PingTarget // leave zero value (empty) to fall back to DefaultPing
+}
+
+// Rules is checked top to bottom, first matching rule wins, it does not keep checking after a match
+var Rules = []Rule{
+	{
+		Name:          "boss emails",
+		SenderEmails:  []string{""}, // replace with actual sender email(s) you want to match and separate with commas
+		WebhookURL:    "", // replace with actual webhook URL you want to use
+		Ping: PingTarget{
+			UserIDs: []string{""}, // replace with actual user ID(s) you want to ping and separate with commas
+		},
+	},
+	{
+		Name:                "client domain",
+		SenderDomains:       []string{""},
+		WebhookURL:          "",
+		Ping: PingTarget{
+			RoleIDs: []string{""},
+		},
+	},
+	{
+		Name:       "urgent keyword catch",
+		Keywords:   []string{""},
+		WebhookURL: "",
+		Ping: PingTarget{
+			RoleIDs: []string{""},
+		},
+		// if ping is removed, it will use DefaultPing
+	},
+}
+
+// PollInterval is how often each account gets checked, in minutes
+// gmail api quota is generous so 2-5 min is safe, going below 1 min is not recommended
+const PollIntervalMinutes = 3
+
+// TimestampOffset is the hours to shift UTC by for the GMT+3 timestamp
+// this only affects logs / debug output, the discord timestamp tag itself
+// is unix time so discord renders it in the viewers own timezone automatically
+const TimestampOffsetHours = 3
+
+// DiscordTimestampStyle controls the letter inside <t:unix:X>
+// f = short date/time, F = long date/time, R = relative ("in 3 hours"), t = short time, T = long time
+const DiscordTimestampStyle = "F"
+
+// BodySnippetLength caps how many characters of the email body get put in the embed
+const BodySnippetLength = 300
+
+// StoreDir is where seen-message tracking files get written, one per account
+const StoreDir = "store_data"
