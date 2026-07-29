@@ -1,5 +1,11 @@
 package main
 
+
+// CHANGE FILE NAME TO config.go WHEN USING.
+
+
+
+
 // everything in this file is meant to be edited directly
 // no env vars, no yaml, just go and change the values below
 
