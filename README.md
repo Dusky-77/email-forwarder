@@ -44,7 +44,7 @@ do this once per google cloud project. you can reuse one project for multiple gm
 ### 2. clone and configure
 
 ```bash
-git clone https://github.com/yourname/email-forwarder.git
+git clone https://github.com/Dusky-77/email-forwarder.git
 cd email-forwarder
 mkdir -p config
 ```
